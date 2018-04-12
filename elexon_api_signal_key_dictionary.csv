@@ -1,0 +1,37 @@
+Signal,Key
+Amount of Balancing Reserves Under Contract,B1720
+Prices Of Procured Balancing Reserves,B1730
+Accepted Aggregated Offers,B1740
+Activated Balancing Energy,B1750
+Prices Of Activated Balancing Energy,B1760
+Imbalance Prices,B1770
+Aggregated Imbalance Volumes,B1780
+Financial Expenses and Income For Balancing,B1790
+CrossBorder Balancing Volumes of Exchanged Bids and Offers ,B1810
+CrossBorder Balancing Prices ,B1820
+Crossborder Balancing Energy Activated ,B1830
+Actual Total Load per Bidding Zone ,B0610
+Day-Ahead Total Load Forecast per Bidding Zone,B0620
+Week-Ahead Total Load Forecast per Bidding Zone ,B0630
+Month-Ahead Total Load Forecast Per Bidding Zone ,B0640
+Year Ahead Total Load Forecast per Bidding Zone,B0650
+Year Ahead Forecast Margin ,B0810
+Installed Generation Capacity Aggregated,B1410
+Installed Generation Capacity per Unit,B1420
+Day-Ahead Aggregated Generation,B1430
+Day-Ahead Generation forecasts for Wind and Solar,B1440
+Actual Generation Output per Generation Unit ,B1610
+Actual Aggregated Generation perType,B1620
+Actual Or Estimated Wind and Solar Power Generation ,B1630
+Expansion and Dismantling Projects ,B0910
+Congestion Management Measures Countertrading ,B1320
+Congestion Management Measures Costs of Congestion Management ,B1330
+Planned Unavailability of Consumption Units ,B0710
+Changes In Actual Availability Of Consumption Units ,B0720
+Planned Unavailability In The Transmission Grid,B1010
+Changes In Actual Availability In The Transmission Grid ,B1020
+Changes In Actual Availability of OffShore Grid Infrastructure ,B1030
+Planned Unavailability of Generation Units ,B1510
+Changes In Actual Availability of Generation Units ,B1520
+Planned Unavailability of Production Units,B1530
+Changes In Actual Availability of Production Units,B1540
