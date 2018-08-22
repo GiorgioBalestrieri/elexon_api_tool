@@ -39,7 +39,7 @@ def query_apy(signal_key, settlement_date,
     api_url = f'{api_base_url}/{signal_key}/{api_version}'
     
     params = {'SettlementDate': date_qstr,
-              'Period':         '*',
+              'Period':         period_qstr,
               'ServiceType':    output_format,
               'APIKey':         api_key}
     
