@@ -1,15 +1,18 @@
 import os
 from pathlib import Path
 import requests
-from io import StringIO
+import xmltodict
+import datetime as dt
 import pandas as pd
+from api_config import (API_BASE_URL, API_VERSION, 
+                        DATE_FORMAT, TIME_FORMAT, DATETIME_FORMAT, 
+                        DATE_PARAMS, TIME_PARAMS, DATETIME_PARAMS, 
+                        REQUIRED_D, RESPONSE_D, DEFAULT_PARAM_VALUES,
+                        API_KEY_FILENAME, HEADER)
 
-# default values
-API_BASE_URL     = 'https://api.bmreports.com/BMRS'
-API_KEY_FILENAME = 'api_key.txt'
-API_VERSION      = 'v1'
-DATE_FORMAT      = '%Y-%m-%d'
-
+#--------------------------------------------------------
+#                       UTILS
+#--------------------------------------------------------
 def _get_path_to_module():
     '''Get path to this module.'''
     return Path(os.path.realpath(__file__)).parent
@@ -29,52 +32,138 @@ def _load_api_key(filename=API_KEY_FILENAME):
     return api_key
 
 
-def query_apy(signal_key, settlement_date, 
-              period=None, output_format='csv', api_key=None,
-              api_base_url=API_BASE_URL, api_version=API_VERSION):
-    
-    if api_key is None: api_key = _load_api_key()
-    date_qstr = settlement_date.strftime(DATE_FORMAT)
-    period_qstr = get_period_qstr(period)
-    api_url = f'{api_base_url}/{signal_key}/{api_version}'
-    
-    params = {'SettlementDate': date_qstr,
-              'Period':         period_qstr,
-              'ServiceType':    output_format,
-              'APIKey':         api_key}
-    
-    r = requests.get(api_url, params=params)
-    if not r.ok: raise Exception(f'Query failed with code {r.status_code}. \n Full message: {r.text}')
-    
-    return r
-
-
-def extract_csv_from_response(r):
-    """A bit hacky."""
-    with StringIO(r.text.split('\n*\n*')[-1].replace('<EOF>','')) as data:
-        df = pd.read_csv(data)
-    return df
-
-
-def query_multiple_days(signal_key, start, end, **query_kwargs):
+#--------------------------------------------------------
+#                       VALIDATION
+#--------------------------------------------------------
+def _check_query(params):
     """
-    Start and end dates are included.
+    Check that query inputs are of the correct format.
+    Will fail on missing arguments, 
     """
+    assert 'ServiceCode' in params.keys(), \
+           "ServiceCode not specified."
+    assert params['ServiceCode'] in REQUIRED_D.keys(), \
+           f"Unknown ServiceCode: {params['ServiceCode']}"
+
+    passed_set      = set(params.keys())
+    required_set    = set(REQUIRED_D[params['ServiceCode']])
+
+    if passed_set != required_set:
+        print("Extra arguments: \n", "\n".join(passed_set - required_set))
+        if not required_set.issubset(passed_set):
+            raise Exception("Missing arguments: \n" + 
+                            "\n".join(required_set - passed_set))
+    return
+
+
+def _check_response(params, r_dict, r):
+    """
+    Check response validity (for applicable signals).
+
+    Args
+    -----
+    - params: dictionary of parameters passed to GET method
+    - r_dict: dictionary, parsed response through xml
+    - r: response object
+    """
+    r_metadata = r_dict['responseMetadata']
+    r_httpdesc = r_metadata['description']
+    r_query = r_metadata['queryString']
     
-    df_l = []
+    if r_httpdesc != 'Success':
+        raise Exception(f"Bad Query. Description : \n{r_httpdesc}"
+                        f"Query url: {r.url}")
     
-    for settlement_date in pd.DatetimeIndex(start=start, end=end, freq='d'):
-        r = query_apy(signal_key, settlement_date, **query_kwargs)
-        df_l.append(extract_csv_from_response(r))
+    if RESPONSE_D[params['ServiceCode']] == True:
+        r_body = r_dict['responseBody']
+        r_servicecode = r_body['dataItem']
+        if r_servicecode != params['ServiceCode']:
+            raise Exception("Service codes don't match \n" +
+                            f"Returned code is {r_servicecode}" +
+                            f"Query url: {r.url}")
+    return
+
+
+def get_required_parameters(service_code, verbose=False):
+    param_list = REQUIRED_D[service_code]
+    if verbose: print('Required parameters: \n', '\n'.join(param_list))
+    return param_list
+
+
+#--------------------------------------------------------
+#                       QUERY
+#--------------------------------------------------------
+def query_API(header=HEADER, check_response=True,  **params):
+
+    # get API key if not passed
+    if params.get('APIKey') is None: params['APIKey'] = _load_api_key()
+
+    # for all required params which have default values, replace None with default
+    params.update({k:v for k,v in DEFAULT_PARAM_VALUES.items() 
+                  if k in REQUIRED_D[params['ServiceCode']] 
+                  and params.get(k) is None})
+
+    _check_query(params)
+
+    url = f"{API_BASE_URL}/{params['ServiceCode']}/{API_VERSION}"
+
+    # update date, time and datetime params
+    params.update({k:v.strftime(DATE_FORMAT) for k,v in params.items() 
+                  if k in DATE_PARAMS and isinstance(v, (dt.date, dt.datetime, pd.Timestamp))})
+    params.update({k:v.strftime(TIME_FORMAT) for k,v in params.items() 
+                  if k in TIME_PARAMS and isinstance(v, (dt.time, dt.datetime, pd.Timestamp))})
+    params.update({k:v.strftime(DATETIME_FORMAT) for k,v in params.items() 
+                  if k in DATETIME_PARAMS and isinstance(v, (dt.datetime, pd.Timestamp))})
+    
+    response = requests.get(url, params=params, headers=header)
+
+    if not response.ok: 
+        raise Exception(f"Query failed with status code {response.status_code}" +
+                        f"Query url: {response.url}" +
+                        f"\nFull message: {response.text}")
+    
+    r_dict = xmltodict.parse(response.text)['response']    
+    
+    if check_response: _check_response(params, r_dict, response)
+    
+    df_items = extract_df(r_dict)
+    
+    return df_items
+
+
+def query_multiple_days(start, end, date_param, **params):
+    """
+    Wrapper around query_API.
+
+    Args:
+    ------
+    - start: datetime or date, included
+    - end:   datetime or date, included
+    - date_param: name of the parameter associated to the date
+    - params: passed to query_API
+    """
+
+    df_l = [] # faster than appending dataframes
+    
+    for date in pd.DatetimeIndex(start=start, end=end, freq='d'):
+        params.update({date_param: date})
+        df = query_API(**params)
+        df_l.append(df)
 
     return pd.concat(df_l, axis=0, ignore_index=True)
-    
 
-def get_period_qstr(period=None):
-    if period is None:
-        return '*'
-    elif isinstance(period, int):
-            return str(period)
-    else:
-        raise TypeError(f'period must be None (for whole day) or int, but {period!r} was passed')
-        
+
+def extract_df(r_dict):
+    """
+    Extract DataFrame from dictionary.
+    r_dict is obtained from response through xmltodict.
+    """
+    r_body       = r_dict['responseBody']
+    r_items_list = r_body['responseList']['item']
+    try:
+        df_items = pd.DataFrame(r_items_list)
+    except:
+        df_items = pd.DataFrame(r_items_list, index=[0])
+    
+    return df_items
+
