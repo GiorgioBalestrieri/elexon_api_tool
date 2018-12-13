@@ -14,12 +14,12 @@ from .api_config import (API_BASE_URL, API_VERSION,
 #                       UTILS
 #--------------------------------------------------------
 def _get_path_to_module():
-    '''Get path to this module.'''
+    """Get path to this module."""
     return Path(os.path.realpath(__file__)).parent
 
 
 def _load_api_key(filename=API_KEY_FILENAME):
-    '''Load api key.'''
+    """Load api key."""
     path_to_dir = _get_path_to_module()
     path_to_file = path_to_dir / filename
     
@@ -60,11 +60,14 @@ def _check_response(params, r_dict, r):
     """
     Check response validity (for applicable signals).
 
-    Args
-    -----
-    - params: dictionary of parameters passed to GET method
-    - r_dict: dictionary, parsed response through xml
-    - r: response object
+    Parameters
+    ----------
+    params : dict
+        Parameters passed to GET method.
+    r_dict : dict
+        Parsed response through xml.
+    r : requests.Response
+        Response from API call.
     """
     r_metadata = r_dict['responseMetadata']
     r_httpdesc = r_metadata['description']
@@ -85,6 +88,9 @@ def _check_response(params, r_dict, r):
 
 
 def get_required_parameters(service_code, verbose=False):
+    """
+    Get list of required parameters for service.
+    """
     param_list = REQUIRED_D[service_code]
     if verbose: print('Required parameters: \n', '\n'.join(param_list))
     return param_list
@@ -94,6 +100,20 @@ def get_required_parameters(service_code, verbose=False):
 #                       QUERY
 #--------------------------------------------------------
 def query_API(header=HEADER, check_query=True, check_response=True,  **params):
+    """
+    Query Elexon API.
+
+    Parameters
+    ----------
+    header : dict
+        Header for the :func:`~requests.get` call.
+    check_query : bool
+        If true, validate the query inputs.
+    check_response : bool
+        If true, validate response.
+    **params
+        Parameters for query.
+    """
 
     # get API key if not passed
     if params.get('APIKey') is None: params['APIKey'] = _load_api_key()
@@ -137,10 +157,14 @@ def query_multiple_days(start, end, date_param, **params):
 
     Args:
     ------
-    - start: datetime or date, included
-    - end:   datetime or date, included
-    - date_param: name of the parameter associated to the date
-    - params: passed to query_API
+    start : datetime.datetime or datetime.date
+        Included.
+    end : datetime.datetime or datetime.date
+        Included.
+    date_param : str
+        Name of the parameter associated to the date.
+    **params
+        Passed to query_API.
     """
 
     df_l = [] # faster than appending dataframes
@@ -159,7 +183,11 @@ def query_multiple_days(start, end, date_param, **params):
 def extract_df(r_dict):
     """
     Extract DataFrame from dictionary.
-    r_dict is obtained from response through xmltodict.
+
+    Parameters
+    ----------
+    r_dict : dict 
+        Obtained from response through xmltodict.
     """
     r_body       = r_dict['responseBody']
     r_items_list = r_body['responseList']['item']
