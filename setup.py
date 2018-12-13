@@ -13,7 +13,6 @@ setup(
     version='0.0.1',
     description=('Elexon API wrapper.'),
     author='Giorgio Balestrieri',
-    # author_email='gbalestrieri@tesla.com',
     packages=find_packages(exclude=['contrib', 'docs', 'tests', 'examples']),
     install_requires=['requests', 'pandas', 'xmltodict']
     )
