@@ -4,7 +4,7 @@ import requests
 import xmltodict
 import datetime as dt
 import pandas as pd
-from api_config import (API_BASE_URL, API_VERSION, 
+from .api_config import (API_BASE_URL, API_VERSION, 
                         DATE_FORMAT, TIME_FORMAT, DATETIME_FORMAT, 
                         DATE_PARAMS, TIME_PARAMS, DATETIME_PARAMS, 
                         REQUIRED_D, RESPONSE_D, DEFAULT_PARAM_VALUES,
@@ -93,7 +93,7 @@ def get_required_parameters(service_code, verbose=False):
 #--------------------------------------------------------
 #                       QUERY
 #--------------------------------------------------------
-def query_API(header=HEADER, check_response=True,  **params):
+def query_API(header=HEADER, check_query=True, check_response=True,  **params):
 
     # get API key if not passed
     if params.get('APIKey') is None: params['APIKey'] = _load_api_key()
@@ -102,8 +102,8 @@ def query_API(header=HEADER, check_response=True,  **params):
     params.update({k:v for k,v in DEFAULT_PARAM_VALUES.items() 
                   if k in REQUIRED_D[params['ServiceCode']] 
                   and params.get(k) is None})
-
-    _check_query(params)
+    
+    if check_query: _check_query(params)
 
     url = f"{API_BASE_URL}/{params['ServiceCode']}/{API_VERSION}"
 
@@ -146,7 +146,10 @@ def query_multiple_days(start, end, date_param, **params):
     df_l = [] # faster than appending dataframes
     
     for date in pd.DatetimeIndex(start=start, end=end, freq='d'):
-        params.update({date_param: date})
+        if isinstance(date_param, str):            
+            params.update({date_param: date})
+        elif isinstance(date_param, (list, tuple, set)):
+            params.update({p:date for p in date_param})
         df = query_API(**params)
         df_l.append(df)
 
