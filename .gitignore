@@ -3,3 +3,4 @@ api_key.txt
 /**/.ipynb_checkpoints/
 __pycache__/
 /**/__pycache__/
+*.egg-info/
