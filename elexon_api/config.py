@@ -1,5 +1,12 @@
-API_BASE_URL        = 'https://api.bmreports.com/BMRS'
+"""
+config.py
+=========
+
+Elexon API configuration.
+"""
+
 API_VERSION         = 'v1'
+API_BASE_URL        = f'https://api.bmreports.com/BMRS'
 API_KEY_FILENAME    = 'api_key.txt'
 HEADER              = {'Accept': 'application/xml'}
 
@@ -29,7 +36,7 @@ DEFAULT_PARAM_VALUES = {
 }
 
 # parameters common to all services (mandatory)
-COMMON_PARAMS = ["ServiceCode", "APIKey"]
+COMMON_PARAMS = ["APIKey"]
 
 # map ServiceCode to group
 SERVICE_TO_GROUP = {'B0610': 1,
