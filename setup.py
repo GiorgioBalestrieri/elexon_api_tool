@@ -14,5 +14,5 @@ setup(
     description=('Elexon API wrapper.'),
     author='Giorgio Balestrieri',
     packages=find_packages(exclude=['contrib', 'docs', 'tests', 'examples']),
-    install_requires=['requests', 'pandas', 'xmltodict']
+    install_requires=['requests', 'pandas', 'xmltodict', 'aiohttp', 'asyncio']
     )
