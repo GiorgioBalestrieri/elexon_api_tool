@@ -170,6 +170,7 @@ class Client:
         if check_query: self._validate_params(service_code, params)
         url = self.get_service_url(service_code)
         
+        # TODO recycle session?
         async with aiohttp.ClientSession() as session:
             async with session.get(url, params=params, headers=header) as response:
                 response.raise_for_status()
