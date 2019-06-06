@@ -1,31 +1,16 @@
-import os
-from pathlib import Path
-
-import asyncio
-import aiohttp
-
+import requests
 import xmltodict
-
 import datetime as dt
 import pandas as pd
 
-import logging
-logger = logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
-
-from .config import (API_BASE_URL, API_VERSION,
+from .config import (API_BASE_URL, API_VERSION, 
                      DATE_FORMAT, TIME_FORMAT, DATETIME_FORMAT, 
                      DATE_PARAMS, TIME_PARAMS, DATETIME_PARAMS, 
                      REQUIRED_D, RESPONSE_D, DEFAULT_PARAM_VALUES,
                      API_KEY_FILENAME, HEADER)
 
-class ElexonAPIException(Exception):
-    pass
-
-
-def get_required_parameters(service_code):
-    """Get list of required parameters for service."""
-    return REQUIRED_D[service_code]
+from .utils import ElexonAPIException
+from .utils import get_api_key_path
 
 
 class Client:
@@ -44,7 +29,7 @@ class Client:
         read ``api_key`` from package directory.
         """
         if key_file is None:
-            key_file = _get_api_key_path()
+            key_file = get_api_key_path()
 
         if not key_file.is_file():
             raise Exception(f'{key_file} not found.')
@@ -52,6 +37,9 @@ class Client:
         with open(key_file, 'r') as f:
             api_key = f.read()
         return cls(api_key, *args, **kwargs)
+
+    def __repr__(self):
+        return "{}".format(self.__class__.__name__)
 
     def get_service_url(self, service_code):
         return f"{self.base_url}/{service_code}/{self.api_version}"
@@ -150,9 +138,8 @@ class Client:
         
         return params
 
-
-    async def query_API(self, service_code, header=HEADER, check_query=True,
-                        check_response=True, **params):
+    def query(self, service_code, header=HEADER, check_query=True,
+              check_response=True, **params):
         """Query Elexon API.
 
         Parameters
@@ -171,50 +158,11 @@ class Client:
         url = self.get_service_url(service_code)
         
         # TODO recycle session?
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, params=params, headers=header) as response:
-                response.raise_for_status()
-                r_text = await response.text()
-        
-        r_dict = xmltodict.parse(r_text)['response']
-        
+        response = requests.get(url, params=params, headers=header)
+        response.raise_for_status()
+        r_dict = xmltodict.parse(response.text)['response']
+    
         if check_response: 
             self._validate_response(service_code, params, r_dict)
         
         return r_dict
-
-
-def extract_df(r_dict):
-    """Extract DataFrame from dictionary.
-
-    Parameters
-    ----------
-    r_dict : dict 
-        Obtained from response through xmltodict.
-    """
-    r_body       = r_dict['responseBody']
-    r_items_list = r_body['responseList']['item']
-    try:
-        df_items = pd.DataFrame(r_items_list)
-    except Exception as e:
-        logger.warning(f"Failed to create DataFrame: {e!r}")
-        try:
-            df_items = pd.DataFrame(r_items_list, index=[0])
-        except Exception as e:
-            logger.error("Failed to create DataFrame.")
-            raise e
-    
-    return df_items
-
-
-#--------------------------------------------------------
-#                       UTILS
-#--------------------------------------------------------
-def _get_path_to_module():
-    """Get path to this module."""
-    return Path(os.path.realpath(__file__)).parent
-
-def _get_api_key_path(filename=API_KEY_FILENAME):
-    """Load api key."""
-    path_to_dir = _get_path_to_module()
-    return path_to_dir / filename
