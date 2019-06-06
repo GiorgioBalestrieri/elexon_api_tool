@@ -12,6 +12,10 @@ from .config import (API_BASE_URL, API_VERSION,
 from .utils import ElexonAPIException
 from .utils import get_api_key_path
 
+import logging
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+
 
 class Client:
 
