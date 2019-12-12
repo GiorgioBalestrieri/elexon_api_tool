@@ -7,6 +7,7 @@ Async implementation of Elexon API Client.
 
 import aiohttp
 import xmltodict
+from collections import OrderedDict
 
 from .config import HEADER
 from .client import Client
@@ -22,12 +23,17 @@ logger.addHandler(logging.NullHandler())
 
 class AsyncClient(Client):
 
-    async def query(self, service_code, header=HEADER, check_query=True,
-                    check_response=True, **params):
+    async def query(self, 
+                    service_code: str, 
+                    header: dict = HEADER, 
+                    check_query: bool = True,
+                    check_response: bool = True, 
+                    **params) -> OrderedDict:
         """Query Elexon API.
 
         Parameters
         ----------
+        service_code : str
         header : dict
             Header for the :func:`~requests.get` call.
         check_query : bool
@@ -51,6 +57,5 @@ class AsyncClient(Client):
         
         if check_response: 
             validate_response(service_code, params, r_dict)
-        
         return r_dict
 

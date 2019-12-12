@@ -36,7 +36,7 @@ def extract_df(r_dict: dict) -> pd.DataFrame:
 
     Parameters
     ----------
-    r_dict : dict 
+    r_dict
         Obtained from response through xmltodict.
     """
     r_body       = r_dict['responseBody']

@@ -2,6 +2,7 @@ import requests
 import xmltodict
 import datetime as dt
 import pandas as pd
+from collections import OrderedDict
 
 from .config import (API_BASE_URL, API_VERSION, 
                      DATE_FORMAT, TIME_FORMAT, DATETIME_FORMAT, 
@@ -18,15 +19,16 @@ logger.addHandler(logging.NullHandler())
 
 
 class Client:
-
-    def __init__(self, api_key, base_url=API_BASE_URL, 
-                 api_version=API_VERSION):
+    def __init__(self, 
+                 api_key: str, 
+                 base_url: str = API_BASE_URL, 
+                 api_version:str = API_VERSION):
         self._api_key = api_key
         self.base_url = base_url
         self.api_version = api_version
 
     @classmethod
-    def from_key_file(cls, key_file=None, *args, **kwargs):
+    def from_key_file(cls, key_file:str=None, *args, **kwargs):
         """Initialize from api key file.
         
         If ``key_file`` is not passed, will try to
@@ -45,12 +47,17 @@ class Client:
     def __repr__(self):
         return "{}".format(self.__class__.__name__)
 
-    def query(self, service_code, header=HEADER, check_query=True,
-              check_response=True, **params):
+    def query(self, 
+              service_code: str, 
+              header: dict = HEADER, 
+              check_query: bool = True,
+              check_response: bool = True, 
+              **params) -> OrderedDict:
         """Query Elexon API.
 
         Parameters
         ----------
+        service_code : str
         header : dict
             Header for the :func:`~requests.get` call.
         check_query : bool
@@ -143,12 +150,11 @@ def validate_response(service_code: str, params: dict, r_dict: dict) -> None:
 
     Parameters
     ----------
+    service_code : str
     params : dict
         Parameters passed to GET method.
     r_dict : dict
         Parsed response through xml.
-    r : requests.Response
-        Response from API call.
     """
     r_metadata = r_dict['responseMetadata']
     r_httpdesc = r_metadata['description']
