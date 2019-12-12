@@ -11,17 +11,17 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-def get_required_parameters(service_code):
+def get_required_parameters(service_code: str) -> List[str]:
     """Get list of required parameters for service."""
     return REQUIRED_D[service_code]
 
 
-def _get_path_to_module():
+def _get_path_to_module() -> Path:
     """Get path to this module."""
     return Path(os.path.realpath(__file__)).parent
 
 
-def get_api_key_path(filename=API_KEY_FILENAME):
+def get_api_key_path(filename=API_KEY_FILENAME) -> Path:
     """Load api key."""
     path_to_dir = _get_path_to_module()
     return path_to_dir / filename

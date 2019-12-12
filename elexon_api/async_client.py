@@ -10,7 +10,10 @@ import xmltodict
 
 from .config import HEADER
 from .client import Client
-# from .utils import extract_df
+from .client import (prepare_query_params,
+                     validate_params, 
+                     get_service_url, 
+                     validate_response)
 
 import logging
 logger = logging.getLogger(__name__)
@@ -34,9 +37,9 @@ class AsyncClient(Client):
         **params
             Parameters for query.
         """
-        params = self.prepare_query_params(service_code, params)
-        if check_query: self._validate_params(service_code, params)
-        url = self.get_service_url(service_code)
+        params = prepare_query_params(self._api_key, service_code, params)
+        if check_query: validate_params(service_code, params)
+        url = get_service_url(self.base_url, self.api_version, service_code)
         
         # TODO recycle session?
         async with aiohttp.ClientSession() as session:
@@ -47,7 +50,7 @@ class AsyncClient(Client):
         r_dict = xmltodict.parse(r_text)['response']
         
         if check_response: 
-            self._validate_response(service_code, params, r_dict)
+            validate_response(service_code, params, r_dict)
         
         return r_dict
 
