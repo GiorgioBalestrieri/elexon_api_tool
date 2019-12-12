@@ -1,6 +1,6 @@
 # Elexon API Tool
 
-This is a minimal tool to query data from the [Elexon API](https://www.elexon.co.uk/wp-content/uploads/2017/06/bmrs_api_data_push_user_guide_v1.1.pdf).
+This is a minimal tool to query data from the [Elexon API](https://www.elexon.co.uk/guidance-note/bmrs-api-data-push-user-guide/).
 
 Much content derived from [ElexonAPIWrapper](https://github.com/AyrtonB/ElexonAPIWrapper):
 * extrapolating DataFrames from the `.xml` response is way less hacky than doing so from the `.csv` response

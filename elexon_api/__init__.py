@@ -1,5 +1,5 @@
 from . import config
-from .utils import get_required_parameters, extract_df
+from .utils import get_required_parameters, extract_df, extract_df_by_record_type
 from .client import Client
 
 import logging
