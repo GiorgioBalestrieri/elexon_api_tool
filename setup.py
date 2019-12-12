@@ -10,7 +10,7 @@ with open(path.join(_here, 'readme.md'), encoding='utf-8') as f:
 
 setup(
     name='elexon_api',
-    version='0.0.1',
+    version='0.1.0',
     description=('Elexon API wrapper.'),
     author='Giorgio Balestrieri',
     packages=find_packages(exclude=['contrib', 'docs', 'tests', 'examples']),
