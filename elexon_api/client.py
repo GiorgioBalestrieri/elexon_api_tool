@@ -3,6 +3,7 @@ import xmltodict
 import datetime as dt
 import pandas as pd
 from collections import OrderedDict
+from dataclasses import dataclass
 
 from .config import (API_BASE_URL, API_VERSION, 
                      DATE_FORMAT, TIME_FORMAT, DATETIME_FORMAT, 
@@ -18,14 +19,11 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
+@dataclass(frozen=True)
 class Client:
-    def __init__(self, 
-                 api_key: str, 
-                 base_url: str = API_BASE_URL, 
-                 api_version:str = API_VERSION):
-        self._api_key = api_key
-        self.base_url = base_url
-        self.api_version = api_version
+    api_key: str
+    base_url: str = API_BASE_URL
+    api_version : str = API_VERSION
 
     @classmethod
     def from_key_file(cls, key_file:str=None, *args, **kwargs):
@@ -44,19 +42,18 @@ class Client:
             api_key = f.read()
         return cls(api_key, *args, **kwargs)
 
-    def __repr__(self):
-        return "{}".format(self.__class__.__name__)
 
-    def query(self, 
-              service_code: str, 
-              header: dict = HEADER, 
-              check_query: bool = True,
-              check_response: bool = True, 
-              **params) -> OrderedDict:
+def query(client: Client,
+          service_code: str, 
+          header: dict = HEADER, 
+          check_query: bool = True,
+          check_response: bool = True, 
+          **params) -> OrderedDict:
         """Query Elexon API.
 
         Parameters
         ----------
+        client : Client
         service_code : str
         header : dict
             Header for the :func:`~requests.get` call.
@@ -67,9 +64,9 @@ class Client:
         **params
             Parameters for query.
         """
-        params = prepare_query_params(self._api_key, service_code, params)
+        params = prepare_query_params(client.api_key, service_code, params)
         if check_query: validate_params(service_code, params)
-        url = get_service_url(self.base_url, self.api_version, service_code)
+        url = get_service_url(client.base_url, client.api_version, service_code)
         
         # TODO recycle session?
         response = requests.get(url, params=params, headers=header)

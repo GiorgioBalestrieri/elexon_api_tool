@@ -49,7 +49,7 @@ Can be installed through pip:
 ## Example
 
 ```python
->>> from elexon_api import Client # checkout the AsyncClient to speed things up
+>>> from elexon_api import Client, query # checkout the query_async to speed things up
 >>> from elexon_api import get_required_parameters
 >>> from elexon_api import extract_df
 >>> client = Client.from_key_file() # specify path to file
@@ -59,7 +59,7 @@ Can be installed through pip:
 >>> params = {'SettlementDate': pd.datetime(2019,6,15),
               'Period': '*'}
 
->>> r_dict = client.query(service_code, **params, check_response=False)
+>>> r_dict = query(client, service_code, **params)
 >>> df = extract_df(r_dict)
 >>> df.head()
 ```
