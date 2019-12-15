@@ -49,34 +49,34 @@ def query(client: Client,
           check_query: bool = True,
           check_response: bool = True, 
           **params) -> OrderedDict:
-        """Query Elexon API.
+    """Query Elexon API.
 
-        Parameters
-        ----------
-        client : Client
-        service_code : str
-        header : dict
-            Header for the :func:`~requests.get` call.
-        check_query : bool
-            If true, validate the query inputs.
-        check_response : bool
-            If true, validate response.
-        **params
-            Parameters for query.
-        """
-        params = prepare_query_params(client.api_key, service_code, params)
-        if check_query: validate_params(service_code, params)
-        url = get_service_url(client.base_url, client.api_version, service_code)
-        
-        # TODO recycle session?
-        response = requests.get(url, params=params, headers=header)
-        response.raise_for_status()
-        r_dict = xmltodict.parse(response.text)['response']
+    Parameters
+    ----------
+    client : Client
+    service_code : str
+    header : dict
+        Header for the :func:`~requests.get` call.
+    check_query : bool
+        If true, validate the query inputs.
+    check_response : bool
+        If true, validate response.
+    **params
+        Parameters for query.
+    """
+    params = prepare_query_params(client.api_key, service_code, params)
+    if check_query: validate_params(service_code, params)
+    url = get_service_url(client.base_url, client.api_version, service_code)
     
-        if check_response: 
-            validate_response(service_code, params, r_dict)
-        
-        return r_dict
+    # TODO recycle session?
+    response = requests.get(url, params=params, headers=header)
+    response.raise_for_status()
+    r_dict = xmltodict.parse(response.text)['response']
+
+    if check_response: 
+        validate_response(service_code, params, r_dict)
+    
+    return r_dict
 
 
 def get_service_url(base_url, api_version, service_code) -> str:
